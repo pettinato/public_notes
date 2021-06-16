@@ -1,0 +1,111 @@
+For OSX with PyCharm
+
+1. First
+  brew cask install homebrew/cask-versions/adoptopenjdk8
+  xcode-select --install
+  brew install scala
+  brew install apache-spark
+
+2. Set Environment Variables
+  export SPARK_HOME="/usr/local/Cellar/apache-spark/{CHECK VERSION HERE}/libexec/"
+  export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/build:$PYTHONPATH
+  export PYTHONPATH=$SPARK_HOME/python/lib/py4j-{CHECK VERSION HERE}-src.zip:$PYTHONPATH
+
+And Java_Home - This can be tricky https://github.com/jupyter/jupyter/issues/248#issuecomment-382191665
+    export JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
+  If you can't find the directory to set for JAVA_HOME,
+  Note: Inside directory JAVA_HOME should be directories bin, bundle, include, jre, lib, man, release
+
+3. Test Pyspark installation
+  Restart PySharm
+
+  Test in Console
+    from pyspark import SparkContext
+    sc = SparkContext()
+
+Troubleshooting
+  https://stackoverflow.com/a/22255174/2596363
+
+Python Unit Testing - Turn Spark On
+In file some_code.py
+
+import pyspark.sql.functions as f
+
+def transformation(spark_df):
+    """
+    Function that does data transformations in spark.
+    :param spark_df: A Spark DataFrame with columns 'col1', and 'col2'
+    :return: spark_df filtered to where col2 >= 200
+    """
+    return spark_df.filter(f.col('col2') >= 200)
+
+
+In test file util_spark_testing.py
+
+"""
+Utility to run Spark Unit Tests locally.
+"""
+
+class SparkUTSingleton:
+    class __SparkUTSingleton:
+        def __init__(self, sc=None, spark=None):
+            # Allow using inputted sc/spark for use in a real cluster
+            if spark is None:
+                from pyspark import SparkConf, SparkContext
+                from pyspark.sql import SparkSession
+                conf = (SparkConf().setMaster("local[2]").setAppName("pyspark-local-testing"))
+                self.sc = SparkContext(conf=conf)
+                self.spark = (
+                    SparkSession.builder.master("local")
+                    .appName("pyspark-local-testing-session").getOrCreate()
+                )
+
+                # Timezone should always be UTC
+                self.spark.conf.set("spark.sql.session.timeZone", "UTC")
+            else:
+                self.sc = sc
+                self.spark = spark
+
+        def __str__(self):
+            return repr(self) + self.val
+
+    instance = None
+
+    def __init__(self, sc=None, spark=None):
+        if not SparkUTSingleton.instance:
+            SparkUTSingleton.instance = SparkUTSingleton.__SparkUTSingleton(sc, spark)
+        self.sc = SparkUTSingleton.instance.sc
+        self.spark = SparkUTSingleton.instance.spark
+
+
+Then in the unit test file test_some_code.py
+
+import unittest
+import pandas as pd
+from pandas.testing import assert_frame_equal
+import pyspark.sql.functions as f
+
+# Import the unit test helper as well as the module to test
+from util_for_testing import SparkUTSingleton
+import some_code
+
+class TestPOC(unittest.TestCase):
+
+    def test_1(self):
+        """Just a basic test here"""
+        spark = SparkUTSingleton().spark  # Initialize singleton OR get the spark session if already available
+        input_df = pd.DataFrame([
+            ['hello', 100],
+            ['world', 200],
+            ['earth', 300],
+        ], columns=['col1', 'col2'])
+
+        raw_output_df = some_code.transformation(spark.createDataFrame(input_df))
+        output_df = raw_output_df.toPandas()
+
+        exp_df = pd.DataFrame([
+            ['world', 200],
+            ['earth', 300],
+        ], columns=['col1', 'col2'])
+
+        assert_frame_equal(output_df, exp_df)

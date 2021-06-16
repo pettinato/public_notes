@@ -1,0 +1,9 @@
+
+# Download a single file from s3 - by default file is stored to location "/dbfs/"
+dbutils.fs.cp('s3://BUCKET/temp.csv', 'temp.csv')  # Downloads to '/dbfs/temp.csv'
+
+# IAM Integration - the client can auto pick up the IAM role for use with boto3
+import boto3
+client = boto3.client('s3')
+print("Role: ", boto3.client('sts').get_caller_identity()['Arn'])
+print('\n'.join([item['Key'] for item in client.list_objects_v2(Bucket='s3-datascience-na')['Contents']]))

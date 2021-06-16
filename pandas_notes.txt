@@ -1,0 +1,264 @@
+
+# Increase line width for dataframe printing
+pd.options.display.max_colwidth=100
+
+# IPython print dataframe with more width, i.e. remove the triple dots ...
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_columns', 20)
+pd.set_option('max_colwidth', 800)
+#pd.set_option('max_rows', 1000) # Sometimes helpful
+
+# Transform single column
+# Where foo is a function or a lambda function
+df.productcategory = df.productcategory.apply(foo)
+
+# Filter on complex function of single column
+df[df.productname.apply(lambda x: 'Organic' not in x)]
+
+# Pare down a dataframe to specific columns
+df2 = df.filter(['col1', 'col2'], axis=1)
+OR
+df2 = df[['col1', 'col2']]
+
+# Delete columns from a data frame
+products_df = products_df.drop(labels=['productid', 'recommendable', 'allowable'], axis=1)
+
+# Remove all columns except for a few
+products_df = products_df[['col', 'col2', 'col2']]
+
+# Inner join two dataframes
+df3 = pd.merge(df1, df2, how='inner', on='productid')
+
+# Make a dataframe from scratch - Method 1
+df = pd.DataFrame()
+df['customerid'] = [1, 1, 2, 3, 4, 5, 5, 5]
+df['is_control'] = [True, True, True, False, False, False, False, False]
+df['orderid'] = [10, 12, 18, 4, 6, 11, 11, 12]
+
+# Make a dataframe from scratch - Method 2
+df = pd.DataFrame({'col1': [1,2,3], 'col2':[4,5,6]})
+
+# Combine two columns into a new column
+df['new'] = df['stuff'] / df['otherstuff']
+
+# Complex data transformations on a row basis
+df.apply(lambda x: x.productid, axis=1)
+
+# Reindex dataframe based on existing column
+df = df.set_index(df.col1)
+
+# Get the row with the minimum value of a specific column
+row = df.loc[df.col1.idxmin()]
+
+# Get the top 10 rows by a specific column
+df.sort(columns=['col1'], ascending=False).head()
+
+# Group by counts
+df.groupby('col').count()
+
+# Get all rows in a DataFrame Column (i.e. Series) that are Not None and Not NaN
+df.b[~df.b.isnull()]
+
+# Apply function to every item of a Column in a series and set new column to this value
+df1 = df1.assign(newcol=df1.oldcol.apply(foo))
+
+# Filter dataframe by column is in list
+
+
+# Transform dataframe into a list of dictionaries by row
+
+
+# Transform a column into a new column using external stuff
+product_df['allowable'] = product_df.productid.apply(lambda pid: pid in a_list_of_pids)
+
+# Expanding transformations, i.e. mean of column over time from now back to the beginning
+df = pd.DataFrame(dict(cid=[1,1,1,2,2], salesdate=['2017-01-01', '2017-01-02', '2017-01-03', '2017-01-02', '2017-01-05'], gross=[1, 2, 3, 4, 5]))
+df.groupby('cid').expanding().gross.mean()
+df.sort_index().groupby('cid').expanding().gross.mean()
+df2[df2.mod_date >= pd.to_datetime('2018-11-16')].shape
+
+# Groupby transform to add a new column
+# For a dataframe with customerid and level
+df = pd.DataFrame(dict(cid=[1, 1, 1, 2, 3, 3], level=[9, 17, 11, 0, 10, 10]))
+# Add a new column that is the maximum level per customerid
+df['max_level'] = df.groupby('cid')['level'].transform(max)
+
+# Do a fast lookup mapping to add a column
+# Use df1 to do a lookup using column x to add column y to df2.
+# Could also use merge
+df1 = pd.DataFrame(dict(x=[1,2,3,4,5], y=['a', 'b', 'c', 'd', 'e']))
+df2 = pd.DataFrame(dict(x=[1,1,3,5,5,5,1]))
+df1.set_index('x', inplace=True)
+df2['y'] = df2.x.map(df1.y)
+
+# Using named arguments in apply
+x=pd.DataFrame([1,2,3,4])
+def add(i1, i2): return i1+i2
+x.apply(add, i2=9)
+
+# Conditional set a column value for some rows
+df = pd.DataFrame(dict(position=[1,2,3,4,5,6], b=[False]*6))
+df.loc[df[df.position >= 3].index, 'b'] = True  # <- BETTER
+df.iloc[df[df.position >= 3].index, df.columns.get_loc('b')] = True
+
+df = df.loc[(df!=0).any(axis=1)]  # Remove all columns that are all zero
+df = df.loc[:, (df != 0).any(axis=0)]  # Remove all rows that are all zero
+
+# Conditional fill na for rows
+df = pd.DataFrame(dict(c1=[False, False, True, True, False], c2=[1, 2, 3, np.nan, np.nan], c3=[10, 11, np.nan, np.nan, 12]))
+df.loc[df[df.c1].index, :] = df.loc[df[df.c1].index, :].fillna(88)
+
+# This is for Python 3
+def helper_gzip_temp_file(contents):
+    """
+    Gzip a contents into a temp file with a hardlink.  Return the gzipped path
+    Be sure to keep track of the tmp variable or else it will be deleted and
+    will automatically delete both files because it's using a hard link.
+    :param contents: unzipped contents
+    :return: tuple of NamedTemporaryFile and Gzipped file path
+    """
+    tmp = tempfile.NamedTemporaryFile()
+
+    # Output to a gzipped file
+    with gzip.open(tmp.name, 'wb') as f:
+        f.write(bytes(contents, 'utf-8'))
+
+    tmp.seek(0)
+
+    # Make a gzipped temp file - will be deleted along with tmp because it's a hardlink
+    gzipped_path = tmp.name + '.gz'
+    os.link(tmp.name, gzipped_path)
+
+    return tmp, gzipped_path
+
+
+# Categorical Columns
+df = pd.DataFrame(dict(cid=[1,1,1,2,2,3], fld=[10, 11, 10, 12, 13, 14]))
+df['cid'] = df['cid'].astype('category')
+df = df[df.cid != 3]
+
+# <- Without this line the output below will include row 3 with sum 0
+# This is due to groupby a categorical column includes all the unused categories in the column.
+df.cid = df.cid.cat.remove_unused_categories()
+df.groupby('cid').fld.sum()
+
+
+#Comments for Notebooks
+# Suppress FutureWarnings
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+# For some reason this has to run twice to stick - Put this into 2 cells for seaborn image size
+sns.set(rc={'figure.figsize':(14,8)})
+
+# Coalesce two Columns
+df = pd.DataFrame(np.random.randint(0, 10, size=(10, 2)), columns=list('ab'))
+df.loc[::2, 'a'] = np.nan
+df['c'] = df.a.combine_first(df.b)
+
+# Cell with a list to multiple rows
+(pd.DataFrame(dict(cid=['a', 'b', 'c'], lst=[[1, 2, 3], [4], [1, 5]]))
+ .set_index('cid').lst.apply(pd.Series).stack().rename('lst').reset_index().drop(columns='level_1'))
+
+##### Dask #####
+# Read in a bunch of files in parallel but keep the path column
+df = dd.read_csv(filenames, include_path_column=True).compute()
+df.head()
+
+
+# S3 file into dataframe example
+obj = s3.get_object(Bucket='thrivemarket-redshift-analytics', Key='UserDataGz/2018/02/2018_02_20.jsonl.gz')
+raw_cust_df = pd.read_json(io.StringIO(gzip.decompress(io.BytesIO(obj['Body'].read()).read()).decode("utf-8")),
+                           lines=True)
+
+# S3 JSON file by line into a DataFrame
+obj = s3.get_object(Bucket='thrivemarket-redshift-analytics',
+                    Key='pettinato/dataclub_test.jsonl.gz')
+test3_df = pd.read_json(io.StringIO(gzip.decompress(obj['Body'].read()).decode("utf-8")), lines=True)
+
+# Push data into S3
+s3.put_object(Body=gzip.compress(bytes(data_str, 'utf-8')),
+              Bucket='bucket',
+              Key='location/abc.txt')
+
+
+# Have some one-hot encoded fields?
+## Method 0
+pd.Series <- ok, by default this will be slow b/c you are using this function
+
+## Method 1
+df = pd.DataFrame(dict(c1=[1, 0, 0], c2=[0, 1, 0], c3=[0, 0, 1], anid=['c1', 'c2', 'c3']))
+df['col'] = df[['c1', 'c2', 'c3']].idxmax(1)
+# Then drop the old cols
+df = df.drop(columns=['c1', 'c2', 'c3'])
+
+## Method 2 - faster than method 1, but more code
+df = pd.DataFrame(dict(c1=[1, 0, 0], c2=[0, 1, 0], c3=[0, 0, 1], anid=['c1', 'c2', 'c3']))
+
+# Build new columns with column name OR np.nan
+for col in ['c1', 'c2', 'c3']:
+    df[col + '_new'] = df[col].map(pd.Series([col, np.nan], index=[1, 0]))
+
+# Do the Coalesce here
+df['new_val'] = df.c1_new
+for col in ['c2_new', 'c3_new']:
+    df['new_val'] = df['new_val'].combine_first(df[col])
+
+# Then drop temp columns
+df = df.drop(columns=['c1', 'c2', 'c3', 'c1_new', 'c2_new', 'c3_new'])
+
+# Drop duplicates by some column and keep the "newest"
+With Data
+sales   day  row_id
+2       Mon       1
+4       Mon       2
+8       Tues      3
+9       Wed       4
+
+Get the sales/day with the highest row_id
+sales   day  row_id
+4       Mon       2
+8       Tues      3
+9       Wed       4
+
+(
+    pd.DataFrame(dict(sales=[2, 4, 8, 9], day=['Mon', 'Mon', 'Tues', 'Wed'], row_id=[1, 2, 3, 4]))
+    .sort_values(['day', 'row_id'])
+    .drop_duplicates(subset='day', keep='last')
+)
+
+# Pivot a dataframe into 1 row with columns as col1, col2, etc
+df = pd.DataFrame(dict(arg=['a', 'b'], value=[6, 7]))  # <- Can add any additional columns here
+pd.concat([asrs.to_frame().T.rename(columns={col: col + str(i) for col in asrs.index}).reset_index(drop=True) for i, asrs in enumerate([df.T[col] for col in df.T.columns])], axis=1)
+
+# Series apply with arguments
+def double_sum(item, extra):
+  return item * 2 + extra
+pd.Series([1, 2, 3]).apply(double_sum, args=(8,))
+
+
+# Set a specific column at a specific index
+df = pd.DataFrame(dict(arg=['a', 'b', 'c', 'd'], value=[6, 7, 8, 9]))
+df.at[2, 'value'] = 42
+
+# Process a dataframe in chunks of size n
+chunk_size = 3
+df = pd.DataFrame(dict(c1=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c2=['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']))
+def foo(chunk_df):
+    return pd.Series(dict(c1_min=chunk_df.c1.min(), c1_max=chunk_df.c1.max(), chunk_length=chunk_df.shape[0]))
+df.groupby(np.arange(len(df)) // chunk_size).apply(foo)
+
+# Compactly print a list in a notebook
+alist = range(72)
+ncols = 10
+pd.concat([pd.DataFrame({f'col{i}': alist[i::ncols]}) for i in range(0, ncols)], axis=1)
+
+# groupby apply with arguments
+df = pd.DataFrame(dict(id=[1, 2, 3, 4], typ=['a', 'a', 'b', 'b']))
+def mult_id(arg_df, c, d):
+    return arg_df['id'] * c * d
+df.groupby('typ').apply(mult_id, (3), (4))
+
+# Get a sorted side-by-side view of lists that are not the same length
+test_data = dict(a=[1, 2, 3], b=['a', 'b', 'c', 'd'], c=[7])
+pd.DataFrame({key: pd.Series(sorted(lst)) for key, lst in test_data.items()}).fillna('')

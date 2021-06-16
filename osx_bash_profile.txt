@@ -1,0 +1,48 @@
+
+# Turn off buffering in python to allow fast printing to stdout
+alias python='python -u'
+
+# Using pep8 with 100 chars per line
+alias pep8='pep8 --max-line-length=100'
+
+#Always show color and always show filename
+alias grep='grep --color=always -H'
+
+#Absolute path of current directory for bash prompt
+PS1='\w\$ '
+
+#virtual environment commands such as workon
+source /usr/local/bin/virtualenvwrapper.sh
+
+#Update ls colors to be more readable
+export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
+
+#AWS configuration for command aws
+export AWS_CONFIG_FILE=$HOME/.aws/config
+
+export PATH=/usr/local/bin:/usr/local/sbin:$PATH
+
+# Long bash history.
+# ---------------------
+# Undocumented feature which sets the size to "unlimited".
+# http://stackoverflow.com/questions/9457233/unlimited-bash-history'
+# use HISTFILESIZE= and HISTSIZE=
+export HISTFILESIZE=10000000
+export HISTSIZE=
+export HISTTIMEFORMAT="[%F %T] "
+# Change the file location because certain bash sessions truncate .bash_history file upon close.
+# http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
+export HISTFILE=~/.bash_command_history
+# Force prompt to write history after every command.
+# http://superuser.com/questions/20900/bash-history-loss
+PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+
+# Setting PATH for Python 3.6
+# The original version is saved in .bash_profile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.6/bin:${PATH}"
+export PATH
+
+# Setting PATH for Python 3.5
+# The original version is saved in .bash_profile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.5/bin:${PATH}"
+export PATH

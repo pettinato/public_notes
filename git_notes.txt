@@ -1,0 +1,119 @@
+
+git status
+git commit -m "comment here"
+
+#Then you commit to the remote branch and push to github
+git push origin BRANCHNAME:BRANCHNAME
+
+#To fetch the metadata
+git fetch
+
+#To fetch files in current branch
+git pull
+
+#To pull in and switch to an existing branch
+git checkout --track origin/BRANCHNAME
+#OR Not sure which is best or if there is a difference
+git checkout -b BRANCHNAME origin/BRANCHNAME
+
+#To switch to an existing branch
+git checkout [name_of_existing_branch]
+
+#To show all branches local and remote
+git branch -a
+
+#To make a new branch
+#create and switch to new branch
+git branch [name_of_your_new_branch]
+git checkout [name_of_your_new_branch]
+
+#create and switch to new branch
+git checkout -b [name_of_your_new_branch]
+
+#Then push the branch into origin
+git push origin [name_of_your_new_branch]
+
+#To add a new file to repo
+git add [filename]
+
+#To undo a git add
+git rm --cached <added_file_to_undo>
+(This command does not delete the file)
+
+#To delete a file from git without deleting from disk
+git rm --cached [filename]
+
+#Diff
+git difftool
+
+#To delete a local branch
+git branch -d [local branch name]
+
+#To switch branches and overwrite any changes with branch info
+git fetch --all
+git reset --hard origin/master
+[then make a new branch and switch to it]
+
+#To merge into local branch changes from another branch
+[switch to local branch that is the destination]
+git fetch [source branch]
+git merge [source branch]
+
+#To undo merge in progress and discard changes
+git reset --hard HEAD~1
+
+#To pull remote branch into local branch - This is basically a git fetch --all followed by a git merge
+git pull --all
+#OR
+# to pull remote branch into current branch
+git pull origin [remote branch]
+
+#To roll back file in current branch to previous commit - This change is not committed
+git log <filename>
+git checkout <filename>
+
+#Compare two branches
+git diff branch1 branch2
+Ex) git diff master BRANCHNAME
+
+# Set upstream branch
+git checkout foo
+git branch -u origin/foo
+git pull --all
+
+# wipe out local changes to branch and overwrite from github
+git fetch --all
+git reset --hard origin/<branch name>
+
+# To clean up branches
+git branch -d <branch name>
+git remote prune origin
+
+# Checkout new branch from an existing remote branch
+git checkout -b LOCALBRANCHNAME origin/REMOTEBRANCHNAME
+
+# Rollback file to previous commit
+git log <filename>
+Pull <a hash> from the log that corresponds to the rollback point
+git checkout <a hash> -- <filename>
+
+# FF error
+# git pull
+# fatal: Not possible to fast-forward, aborting.
+git merge --no-ff
+
+##### WARNING CODE BELOW HERE, BE REALLY CAREFUL ###############################
+# Oops, I pushed my password file into github!
+(may take a while, but it's useful for removing bad password files)
+
+```git filter-branch --index-filter "git rm -rf --cached --ignore-unmatch path/to/undesirable/file" HEAD```
+
+VERIFY, then push
+```git push -all```
+################################################################################
+
+
+# Set blank repository with new branch "master" as the default branch
+git clone ...
+git symbolic-ref HEAD refs/heads/master
+[do a commit and push as normal]

@@ -1,0 +1,9 @@
+To increase ths speed of the mouse
+1. See current speed
+defaults read -g com.apple.mouse.scaling
+Should be set to 3.0
+
+2. Increase
+defaults write -g com.apple.mouse.scaling -float 7.0
+
+3. Restart 

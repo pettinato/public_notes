@@ -1,0 +1,165 @@
+Information about setting up a python module as a library.
+
+
+
+
+###### Base README ######
+This base README assumes,
+1. This module is a library
+2. Directory structure
+module_repo_name
+.gitignore
+.pre-commit-config.yaml
+README.md
+requirements.txt
+requirements-dev.txt
+setup.cfg
+setup.py
+--module_repo_name
+----lib1
+------alib.py
+--tests
+----test_lib1
+------test_alib.py
+
+# module_repo_name
+WTF does this do?
+
+# Usage
+How do I use this code as a library?
+
+## Scripts and Automated Code Use
+Use pip as conda can't install directly from github.
+
+1. Activate your virtual environment via `source activate YOUR_ENV_NAME`
+2. Install from master branch
+```
+pip install git+ssh://git@github.com/ThriveMarket/module_repo_name.git
+```
+This could also be placed into a `requirements.txt` file and installed via `pip install -r requirements.txt`.
+
+3. Optional: Install from a custom branch
+```
+pip install git+ssh://git@github.com/ThriveMarket/module_repo_name.git@BRANCH_NAME_HERE
+```
+
+4. Import such as
+```
+from module_repo_name.db_utils import redshift_util
+```
+
+## Notebook Setup and usage
+1. Make a virtual envrionment and install as per `Scripts and Automated Code Use` above.
+2.
+```
+source activate YOUR_ENV_NAME
+conda install --name YOUR_ENV_NAME ipykernel
+python -m ipykernel install --user --name YOUR_ENV_NAME"
+```
+3. Restart jupyter notebook
+4. Your environment should be available in the list of kernels as name `YOUR_ENV_NAME`
+5. Import such as
+```
+from module_repo_name.db_utils import redshift_util
+```
+
+# Development Setup
+## module_repo_name development
+How do I setup this repository to add new code and/or modify existing code?
+
+### conda
+How do I enhance libraries, add new code and run tests on existing code in this repo?
+
+1. Optional: `conda config --add channels conda-forge`
+  * Allows for seamless installation of `sqlalchemy-redshift`.  Only needs to be run once per conda installation.
+2. Make conda environment and install libraries for development and unit testing.
+```
+conda create --name module_repo_name python=3.6 --yes
+conda activate module_repo_name
+python setup.py develop
+conda install --name module_repo_name --file requirements-dev.txt --yes
+```
+3. Verify `which python`
+4. Run tests `pytest tests/`
+
+# Testing
+## Unit Tests
+* You can setup the tests to run on every commit with `pre-commit install`
+* You can run all unit-tests at the same time as
+```
+pytest tests/
+```
+* You can run a particular unit test as `pytest tests/test_db_utils/test_redshift_util.py`
+* PyTest is also integrated with PyCharm so you shouldn't have any issues switching the test runner to be PyTest.
+
+For more verbose failure and success reports, use
+```
+pytest -s -vv tests/
+```
+
+# Development Standards
+## Git hook for linting and pep8
+Development standards are wrapped by a pre-commit hook.  This typically is run whenever a `git push` is called but can
+be run manually via
+```
+pre-commit run --all-files
+```
+
+## Linting and pep8 manually
+This uses `flake8` to check for style and linting issues.  This can be run manually via
+```
+flake8 --config setup.cfg
+```
+
+## Coverage
+As this is a standard library, let's try to keep the codebase clean and consistent.
+Run the following to check test coverage,
+```
+pytest --cov=module_repo_name tests/
+```
+
+
+FILES
+##### .pre-commit-config.yaml ##### ##### ##### ##### ##### ##### #####
+default_language_version:
+  python: python3.6
+default_stages: [commit]
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.2.1
+    hooks:
+    - id: flake8
+-   repo: local
+    hooks:
+    - id: pytest
+      name: Check pytest unit tests pass
+      entry: pytest
+      pass_filenames: false
+      language: python
+
+
+##### setup.cfg ##### ##### ##### ##### ##### ##### #####
+[flake8]
+max-line-length = 120
+exclude = tests/*
+
+##### setup.py ##### ##### ##### ##### ##### ##### #####
+from setuptools import setup, find_packages
+
+requirements = open('requirements.txt', 'r').readlines()
+
+setup(
+    name='module_repo_name',
+    version='0.1.0',
+    description='stuff',
+    url='TBD',
+    packages=find_packages(exclude=["tests*"]),
+    install_requires=requirements
+    # scripts=[],  # No scripts for now
+)
+
+
+# Ensuring that pytest is using the correct virtual environment
+https://medium.com/@dirk.avery/pytest-modulenotfounderror-no-module-named-requests-a770e6926ac5
+Basically `pip uninstall pytest && pip install pytest`
+then close the terminal window and open a new one

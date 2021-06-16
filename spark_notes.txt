@@ -1,0 +1,388 @@
+
+###############################################################################################
+# Run multiple independent spark jobs in parallel without waiting for the first one to finish
+# multiprocessing can't pickle spark context so it can't be used
+# spark jobs can't access the spark context so they can't be used
+# this solution uses threads instead of different processes so that
+#   1. spark can be shared between the different threads
+#   2. local variables can be shared between the different threads
+
+from pyspark.sql.functions import udf, col, mean
+from pyspark.sql.types import IntegerType, LongType
+from joblib import Parallel, delayed
+import pandas as pd
+import random
+
+lst = list(range(10, 10000))
+
+def multiply(a):
+  return a * random.randint(10, 100)
+
+def foo(i):
+  #This is the key point here, many different spark collect/save/show can be run here in parallel
+  return spark.createDataFrame(range(0, i), LongType()).select(mean(multiply(col("value"))).alias("value"))
+
+parallel_job_count = 10
+
+# Use "threads" to allow the same spark object to be reused between the jobs.
+results = Parallel(n_jobs=parallel_job_count, prefer="threads")(delayed(foo)(i) for i in lst)
+
+mean_of_means = pd.concat([result.toPandas() for result in results]).value.mean()
+print(f"Mean of Means: {mean_of_means}")
+###############################################################################################
+
+# Unique values in a column as a python list
+df = spark.createDataFrame(pd.DataFrame(dict(col=['a', 'b', 'a', 'a', 'c', 'z'])))
+df.select('col').distinct().rdd.map(lambda row: row[0]).collect()  # This is a list ['z', 'c', 'b', 'a']
+
+# Sort by column, groupby and take the first row - like in Pandas but in Spark
+import pandas as pd
+from pyspark.sql import Window, Column
+from pyspark.sql.functions import rank, asc, col
+
+df = pd.DataFrame([
+    ['id1', 'val1', 1],  # Keep this row
+    ['id1', 'val2', 2],
+    ['id1', 'val3', 3],
+
+    ['id2', 'val1', 1],  # Keep this row
+    ['id2', 'val1', 2],
+  ], columns=['id_col', 'val', 'col_for_rank'])
+sdf = spark.createDataFrame(df)
+
+window = Window.partitionBy("id_col").orderBy(asc(Column("col_for_rank")))
+
+new_df = (
+  sdf.withColumn('rank', dense_rank().over(window))
+  .filter(col('rank') == 1)
+  .drop('rank'))
+new_df.toPandas()
+
+# Bulk rename columns
+sdf.select([col(acol).alias(acol + '_tmp') for acol in sdf.columns]).columns
+
+# Bulk rename columns with method chaining
+sdf.transform(lambda df: df.select([col(acol).alias(acol + '_tmp') for acol in df.columns])).columns
+
+# Bulk rename columns with dictionary old col name to new col name
+def rename_cols(map_dict):
+  """
+  Rename a bunch of columns in a data frame
+  :param map_dict: Dictionary of old column names to new column names
+  :return: Function for use in transform
+  """
+  def _rename_cols(df):
+    for old, new in map_dict.items():
+      df = df.withColumnRenamed(old, new)
+    return df
+  return _rename_cols
+df = df.transform(rename_cols({f'random_cols_array[{i}]':f'col{i}' for i in range(col_count)}))
+
+
+# ffill
+import pandas as pd
+import sys
+from pyspark.sql.window import Window
+import pyspark.sql.functions as f
+
+df = spark.createDataFrame(pd.DataFrame([
+  ['a', 1, None, 'not filled'],
+  ['a', 2, 'ffa', 'unchanged'],
+  ['a', 3, None, 'filled with ffa'],
+  ['a', 4, None, 'filled with ffa'],
+  ['b', 1, 'ffb', 'unchanged'],
+  ['b', 2, None, 'filled with ffb'],
+  ['b', 3, None, 'filled with ffb'],
+  ['b', 4, None, 'filled with ffb'],
+  ['c', 1, '42', 'unchanged'],
+  ['d', 1, None, 'unchanged']
+], columns=['c1', 'c2', 'c3', 'c4']))
+
+# ffill inside of each each c1 column
+the_window = Window.orderBy("c2").partitionBy('c1').rowsBetween(-sys.maxsize, 0)
+
+display(
+  df.withColumn('new_c3', f.last('c3', ignorenulls=True).over(the_window))
+  .orderBy('c1', 'c2')
+)
+
+# backfill - same as ffill but the `.rowsBetween(-sys.maxsize, 0)` is swapped to be `.rowsBetween(0, sys.maxsize)`
+import pandas as pd
+import sys
+from pyspark.sql.window import Window
+import pyspark.sql.functions as f
+
+df = spark.createDataFrame(pd.DataFrame([
+  ['a', 1, None, 'filled with bfa'],
+  ['a', 2, None, 'filled with bfa'],
+  ['a', 3, 'bfa', 'unchanged'],
+  ['a', 4, None, 'unchanged'],
+  ['b', 1, None, 'filled with bfb'],
+  ['b', 2, None, 'filled with bfb'],
+  ['b', 3, None, 'filled with bfb'],
+  ['b', 4, 'bfb', 'unchanged'],
+  ['c', 1, '42', 'unchanged'],
+  ['d', 1, None, 'unchanged'],
+], columns=['c1', 'c2', 'c3', 'c4']))
+
+# backfill inside of each each c1 column
+the_window = Window.orderBy("c2").partitionBy('c1').rowsBetween(0, sys.maxsize)
+
+display(
+  df.withColumn('new_c3', f.last('c3', ignorenulls=True).over(the_window))
+  .orderBy('c1', 'c2')
+)
+
+Redshift - JDBC URL
+jdbc_url_string = ''.join([
+  "jdbc:redshift://",
+  dbutils.secrets.get(scope = secret_scope, key = "redshift_host"), ":",
+  dbutils.secrets.get(scope = secret_scope, key = "redshift_port"), "/",
+  dbutils.secrets.get(scope = secret_scope, key = "redshift_db"), "?",
+  "user=", dbutils.secrets.get(scope = secret_scope, key = "redshift_user"),
+  "&password=", dbutils.secrets.get(scope = secret_scope, key = "redshift_password")
+])
+
+
+# Read single csv file
+csv_df = (
+  spark.read.format('com.databricks.spark.csv')
+  .options(header='true', inferschema='true')
+  .load(s3_path)
+)
+
+# Simple UDF Example
+from pyspark.sql import functions as f
+from pyspark.sql.types import StringType
+import pandas as pd
+(
+  spark.createDataFrame(pd.DataFrame(dict(the_col=['  abc', 'def  ', ' h i j '])))
+  .select(f.udf(lambda val: val.strip(), StringType())('the_col').alias('clean_col'))
+  .show()
+)
+
+# Am I running in DataBricks?
+if 'DATABRICKS_RUNTIME_VERSION' in os.environ.keys():
+  print("yes")
+
+
+# Read
+1. Delta
+  v1: spark.read.format('delta').load(s3_location)
+  v2:
+    from delta.tables import DeltaTable
+    delta_table = DeltaTable.forPath(spark, delta_location)
+    delta_df = delta_table.toDF()
+2. Parquet > spark.read.parquet(s3_location)
+3. A single CSV File with a header
+  (
+    spark.read.format('com.databricks.spark.csv')
+    .options(header='true', inferschema='true')
+    .load(s3_path)
+  )
+4. From Redshift - Full Table
+df = (
+  spark.read
+  .format("com.databricks.spark.redshift")
+  .option("url", jdbc_url_string)
+  .option("dbtable", table_name)
+  .option("tempdir", temp_dir)
+  .option('forward_spark_s3_credentials', True)
+  .load()
+)
+5. From Redshift - From Query
+df = (
+  spark.read
+  .format("com.databricks.spark.redshift")
+  .option("url", jdbc_url_string)
+  .option("query", query)
+  .option("tempdir", temp_dir)
+  .option('forward_spark_s3_credentials', True)
+  .load()
+)
+
+
+# Write
+1. Delta Table
+(
+    spark_df
+    .write
+    .partitionBy(['col1', 'col2''])
+    .format('delta')
+    .mode(mode)
+    # Optional options
+    #.option('replaceWhere', 'something here')
+    #.option('mergeSchema', "true")
+    .save(s3_dest)
+)
+
+2. Parquet Table
+(
+  spark.createDataFrame(df)
+  .write
+  .partitionBy(*partition_cols)
+  .format('parquet')
+  .mode('append')
+  .save(s3_loc)
+)
+
+# Filter Tips
+1. Filter to "in a list" > df.filter(~df.score.isin(lst))
+2.
+
+# Groupby distinct count
+df.groupby('col').agg(f.countDistinct('col2'))
+
+# Grab the latest based on a timestamp column
+data_df = (
+  spark.read.parquet(s3_location)
+  .transform(lambda df: df.filter(f.col('datetime').cast('Timestamp')
+      == df.agg(f.max(f.col('datetime').cast('Timestamp'))).collect()[0][0]))
+)
+
+
+# Distinct counts of all columns in a dataframe
+aggs = [f.countDistinct(col).alias(col) for col in df.columns]
+counts_dict = df.select(*aggs).collect()[0].asDict()
+# Then display or print
+counts_df = pd.DataFrame(counts_dict, index=["distinct_count"]).T
+
+# Print all distinct values in each column in a columnar format
+distinct_df = pd.DataFrame(
+  {
+    acol: pd.Series([row[acol] for row in df.select(acol).distinct().collect()]).astype(str).sort_values()
+    for acol in df.columns
+  }
+).fillna('')
+display(distinct_df)
+
+########### Working with Vector Columns ############################################
+
+# Given columns, how do I get a Vector column?
+from pyspark.ml.feature import VectorAssembler
+
+df = spark.createDataFrame(pd.DataFrame([
+  ['id1', 10, 11, 12, 13],
+  ['id1', 14, 15, 17, 19],
+  ['id2', 44, 22, 12, 13],
+], columns=['id1', 'col1', 'col2', 'col3', 'col4']))
+
+df = VectorAssembler(inputCols=['col1', 'col2'], outputCol='vector_col1').transform(df)
+
+display(df)
+
+# Given a vector column, how do I get individual columns?
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.functions import vector_to_array
+import pyspark.sql.functions as f
+
+df = (
+  spark.createDataFrame(
+    pd.DataFrame([
+      ['id1', 10, 11, 12, 13],
+      ['id1', 14, 15, 17, 19],
+      ['id2', 44, 22, 12, 13],
+    ], columns=['id1', 'col1', 'col2', 'col3', 'col4'])
+  )
+  # First make a column that's a vector
+  .transform(lambda inner_df: VectorAssembler(inputCols=['col1', 'col2'], outputCol='vector_col1').transform(inner_df))
+  # Split up the vector column vector_col1 into columns col1 and col2
+  .withColumn("vector_col1_array", vector_to_array("vector_col1"))
+  .select(["id1", 'col1', 'col2', 'col3', 'col4'] + [f.col("vector_col1_array")[i] for i in range(2)])
+  .withColumnRenamed('vector_col1_array[0]', 'new_col1')
+  .withColumnRenamed('vector_col1_array[1]', 'new_col2')
+)
+
+display(df)
+
+########################################################################################
+
+## Random DataFrame
+import pyspark.sql.functions as f
+from pyspark.mllib.random import RandomRDDs
+from pyspark.mllib.linalg import DenseVector
+from pyspark.ml.functions import vector_to_array
+from pyspark.sql.window import Window
+
+def rename_cols(map_dict):
+  """
+  Rename a bunch of columns in a data frame
+  :param map_dict: Dictionary of old column names to new column names
+  :return: Function for use in transform
+  """
+  def _rename_cols(df):
+    for old, new in map_dict.items():
+      df = df.withColumnRenamed(old, new)
+    return df
+  return _rename_cols
+
+row_count = 1000
+col_count = 10
+partition_count = 100
+
+df = (
+  # Make random numbers into a DataFrame
+  RandomRDDs.uniformVectorRDD(spark, row_count, col_count, numPartitions=partition_count)
+  .map(lambda item: DenseVector(item))
+  .map(lambda dvec: (dvec, ))
+  .toDF(['random_cols'])
+  # Split the single column into multiple columns
+  .withColumn("random_cols_array", vector_to_array("random_cols"))
+  .select([f.col("random_cols_array")[i] for i in range(col_count)])
+  .transform(rename_cols({f'random_cols_array[{i}]':f'col{i}' for i in range(col_count)}))
+  # Add an id column
+  .withColumn("id_col", f.concat(f.row_number().over(Window().orderBy('col0'))))
+  .repartition(partition_count)
+)
+
+## Cosine Distance
+def add_cosine_similarity_col(data_df, vector_cols1, vector_cols2):
+  """
+  For a dataframe, calculate the cosine similarity between two sets of columns
+  Use Spark Opertations to calculate the cosine similarity
+  :param data_df: DataFrame with columns vector_cols1, vector_cols2
+  :param vector_cols1: List of columns
+  :param vector_cols2: List of columns
+  :return: DataFrame the same as data_df but with new column "cosine_similarity"
+  """
+  return data_df.withColumn(
+    "cosine_similarity",
+    sum([f.col(c1) * f.col(c2) for c1, c2 in zip(vector_cols1, vector_cols2)]) /
+    (
+      f.sqrt(sum([f.col(c1)**2 for c1 in vector_cols1]))
+      * f.sqrt(sum([f.col(c2)**2 for c2 in vector_cols2]))
+    )
+  )
+
+def add_cosine_similarity_col_wrapper(vector_cols1, vector_cols2):
+  """
+  Wrapper for function add_cosine_similarity_col to allow for simple calls like
+  .transform(add_cosine_similarity_col_wrapper(colsA, colsB))
+  """
+  def inner_temp(data_df):
+    return add_cosine_similarity_col(data_df, vector_cols1, vector_cols2)
+  return inner_temp
+
+
+# Counts
+pprint.pprint(
+  purchase_df.agg(f.countDistinct('user_id').alias('user_id_count'),
+                  f.countDistinct('sku').alias('sku_count'),
+                  f.count('*').alias('row_count'))
+  .collect()[0].asDict(),
+  width=10
+)
+
+# Create dataframe with 2 columns
+spark.createDataFrame([("Java", "20000"), ("Python", "100000"), ("Scala", "3000")]).toDF('language', 'count')
+
+# Update delta table -- Update column named somecol to be of type LONG
+CREATE TABLE IF NOT EXISTS dev.tmp_pettinato USING DELTA LOCATION 's3://bucket/thedir/';
+ALTER TABLE dev.tmp_pettinato ALTER somecol TYPE LONG;  -- hmm, this doesn't actually work
+DROP TABLE dev.tmp_pettinato;
+
+# Filter on arrow datetime with 'date' stored as a string and filter_date as YYYY-MM-DD
+df = (
+  spark.read.format('delta').load(s3_location)
+  .filter(f.col('date').cast('Timestamp') <= arrow.get(filter_date).datetime)
+)

@@ -1,0 +1,93 @@
+
+# Bit of code that can be used to store stack traces
+with open('out.txt', 'a') as f:
+    import traceback
+    for line in traceback.format_stack():
+        f.write(line)
+
+
+class ArgParseFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    """
+    Helper class for ArgParse to have both better formatting
+    Usage: parser = argparse.ArgumentParser(description=description, formatter_class=ArgParseFormatter)
+
+    Formatting of description and arguments will be wider and will automatically print any default argument values.
+    """
+    pass
+
+# Pretty print a dictionary
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+# Dictionary has to be long enough to get value from pprint otherwise it's printed on a single line
+pp.pprint(dict(thisiskey1=18, key2hello='hello', worldisgood='z', otherstuff='fisoaf'))
+
+
+Pycharm Multi line cursor
+Shift + Option + Mouse drag
+
+*** sklearn ***
+roc_auc_score returns the AUC as per the documentation https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score
+
+
+# 2 class confusion matrix
+pd.DataFrame(confusion_matrix(y_test, predictions),
+             index=pd.MultiIndex.from_tuples([('actual', False), ('actual', True)]),
+             columns=pd.MultiIndex.from_tuples([('predicted', False), ('predicted', True)]))
+
+# All ordered combinations of a list
+lst = ['a' ,'b', 'c']
+list(itertools.permutations(lst, 2))
+# [('a', 'b'), ('a', 'c'), ('b', 'a'), ('b', 'c'), ('c', 'a'), ('c', 'b')]
+
+# Unordered combinations of a list
+lst = ['a' ,'b', 'c']
+list(itertools.combinations(lst, 2))
+# [('a', 'b'), ('a', 'c'), ('b', 'c')]
+
+# arrow print date as 2d numbers
+now = arrow.now()
+# now = arrow.get('0010-2-3')
+print(f"{now.year:04d}_{now.month:02d}_{now.day:02d}")
+
+# Pip install from repo
+pip install git+ssh://git@github.com/reponame.git@dev#subdirectory=subdir123
+pip install git+ssh://[STUFF FROM GIT CLONE HERE]@[BRANCHNAME]#subdirectory=[SUBDIRECTORY WITH setup.py SCRIPT]
+
+
+"""Print the size of all the files in an s3 directory"""
+def print_s3_du_size(bucket, prefix):
+  import boto3
+  s3 = boto3.client('s3')
+
+  # Create a reusable Paginator
+  paginator = s3.get_paginator('list_objects_v2')
+
+  # Create a PageIterator from the Paginator
+  page_iterator = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+  the_list = [page for page in page_iterator]
+
+  byte_size = sum([content['Size'] for apage in the_list for content in apage['Contents']])
+  print(f"Temp size is: {byte_size / 1024**3} GBs")
+  print(f"Temp size is: {byte_size / 1024**4} TBs")
+
+
+"""Regex Filter a list"""
+
+
+
+
+
+### Troubleshooting unittests running through PyCharm
+Error looks like:
+```
+from ..test_util import Something
+ValueError: attempted relative import beyond top-level package
+```
+This can be fixed by updating the Working Directory to the absolute directory of this repository such as
+`/Users/stephenpettinato/Projects/the_project_dir_name/`.
+
+Steps
+1. Run the test, it fails
+2. Run-Edit Configurations
+3. Select failing test and change "Working Directory"

@@ -1,0 +1,48 @@
+
+brew install r
+brew cask install rstudio
+
+brew install java
+brew install jenv
+jenv add /Library/Java/JavaVirtualMachines/openjdk-13.0.2.jdk/Contents/Home/
+R CMD javareconf
+
+In R command line
+install.packages("tidyverse")
+install.packages("rJava")
+install.packages("RJDBC")
+install.packages("rjson")
+install.packages("dplyr")
+install.packages("RPostgres")
+install.packages("dbplyr")
+
+# Database Connection
+library(dplyr)
+library(RPostgreSQL)
+
+# Download Redshift driver file
+# https://aws.amazon.com/blogs/big-data/connecting-r-with-amazon-redshift/
+download.file('http://s3.amazonaws.com/redshift-downloads/drivers/RedshiftJDBC41-1.1.9.1009.jar','RedshiftJDBC41-1.1.9.1009.jar')
+
+
+##################################################
+1. When googling, add "tidyverse" or "rstudio", this is similar to adding pandas in python
+2. Use this header for rmarkdown
+---
+title: "Area Report Analysis"
+date: "9/10/17"
+output:
+  html_notebook:
+    depth: 4
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+3. Use rmarkdown in rstudio instead of Notebooks
+4. Can use notebooks in RStudio
+5. Use R cheatsheets https://rstudio.com/resources/cheatsheets/
+
+##################################################

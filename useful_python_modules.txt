@@ -1,0 +1,2 @@
+Print status during pandas apply statements
+https://github.com/tqdm/tqdm

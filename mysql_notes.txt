@@ -1,0 +1,24 @@
+
+-- new user
+CREATE USER 'myuser123' IDENTIFIED BY 'apassword';
+
+-- change password
+ALTER USER 'myuser123' IDENTIFIED BY 'anotherpassword';
+
+-- Show all users
+SELECT User FROM mysql.user;
+
+-- Show all schemas
+SHOW SCHEMAS;
+
+-- Show all tables in a schema
+SHOW tables IN information_schema;
+
+-- Find currently running queries
+SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST;
+
+-- Make SQL that can be run to kill all queries
+SELECT concat('KILL ',id,';') from information_schema.processlist;
+
+-- Kill a single query - always works for queries owned by the current username
+KILL 408;

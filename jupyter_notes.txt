@@ -1,0 +1,33 @@
+
+# Print out all variables in a cell
+from IPython.core.interactiveshell import InteractiveShell
+InteractiveShell.ast_node_interactivity = "all"
+
+# IPython print dataframe with more width, i.e. remove the triple dots ...
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_columns', 20)
+pd.set_option('max_colwidth', 800)
+#pd.set_option('max_rows', 1000) # Sometimes helpful
+
+# To help when Jupyter Notebook autocomplete is really slow
+%config Completer.use_jedi = False
+
+# View docstring and source code - Run this in its' own cell
+?str.replace
+
+# Side by Side display of DataFrames
+from IPython.display import display_html
+def display_side_by_side(*args):
+    html_str=''
+    for df in args:
+        html_str+=df.to_html()
+    display_html(html_str.replace('table','table style="display:inline"'),raw=True)
+
+
+# What's the python version?
+from platform import python_version
+print(python_version())
+
+# Which python path is running?
+import sys
+print(sys.executable)

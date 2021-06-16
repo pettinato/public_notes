@@ -1,0 +1,14 @@
+Delete all keys matching a pattern
+redis-cli -h localhost --scan --pattern prefix_pattern* | xargs -n 1 redis-cli -h localhost -c del
+
+# Delete all pyc files in current directory tree
+find . -name "*.pyc" -exec rm -r {} \;
+
+# Set up current month softlink
+ln -s ~/Archive/2017/April/ ~/April
+
+# Remove softlink from previous month
+unlink ~/March
+
+# Redirect stdout and stderr to a log file
+stuff.sh &> logfile.log

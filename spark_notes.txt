@@ -386,3 +386,12 @@ df = (
   spark.read.format('delta').load(s3_location)
   .filter(f.col('date').cast('Timestamp') <= arrow.get(filter_date).datetime)
 )
+
+
+# Join two dataframes with nulls in the join columns
+df1 = spark.createDataFrame(pd.DataFrame(dict(col1=['a', 'b', None], col2=[1, 2, 3])))
+df2 = spark.createDataFrame(pd.DataFrame(dict(col1=['a', 'c', None], col3=[10, 40, 30])))
+df1.join(df2, on=df1.col1.eqNullSafe(df2.col1), how='inner')
+
+# Running this can reveal how the join drops the rows where col1 is None
+df1.join(df2, on='col1', how='inner').show()

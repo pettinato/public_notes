@@ -395,3 +395,87 @@ df1.join(df2, on=df1.col1.eqNullSafe(df2.col1), how='inner')
 
 # Running this can reveal how the join drops the rows where col1 is None
 df1.join(df2, on='col1', how='inner').show()
+
+# Format strings to be percents with limited decimals
+display(
+  spark.createDataFrame(pd.DataFrame(dict(col1=[1.234, 123.456, 0.1234567])))
+  .select(
+    f.format_string('%2.4f%%', f.col('col1')).alias('col1'),
+    f.format_string('%2.4f%%', 1.277 * f.col('col1')).alias('col2')
+  )
+)
+
+# Assign a group id
+from pyspark.sql.window import Window
+import pyspark.sql.functions as f
+import pandas as pd
+
+display(
+  spark.createDataFrame(pd.DataFrame([
+    ['c1A', 'c2A', 'c3A', 1],
+    ['c1A', 'c2A', 'c3A', 2],
+    ['c1A', 'c2A', 'c3A', 3],
+    ['c1A', 'c2A', 'c3A', 4],
+
+    ['c1B', 'c2B', 'c3B', 1],
+    ['c1B', 'c2B', 'c3B', 2],
+
+    ['c1C', 'c2C', 'c3C', 3],
+  ], columns=['col1', 'col2', 'col3', 'col4']))
+  .withColumn('groupid',
+             f.dense_rank().over(Window.orderBy('col1', 'col2', 'col3')))
+)
+
+# Assign a group id where the timestamp ordered rows are separated by "sections"
+# This is basically the web event page view pattern - assign everything on a single page view to a single group_id
+
+# Groupid where a timestamp orders events and groups must be consecutive
+# There are a few different Window approaches here, but this approach uses
+# 1. groupby to get the first row
+# 2. set an id column
+# 3. join back to original data
+# 4. do a ffill on the id column
+from pyspark.sql.window import Window
+import pyspark.sql.functions as f
+import pandas as pd
+
+display(
+  spark.createDataFrame(
+    pd.DataFrame([
+      ['2020-06-06', 'c2A', 'c3A', 1], # Group 1
+      ['2020-06-07', 'c2A', 'c3A', 2],
+      ['2020-06-08', 'c2A', 'c3A', 3],
+      ['2020-06-09', 'c2A', 'c3A', 4],
+
+      ['2020-06-10', 'c2A', 'c3B', 3], # Group 2
+      ['2020-06-11', 'c2A', 'c3B', 4],
+
+      ['2020-06-12', 'c2A', 'c3A', 9], # Group 3 - since Group 2 separates the events
+      ['2020-06-13', 'c2A', 'c3A', 8],
+
+      ['2020-06-13', 'c2B', 'c3B', 1], # Group 4
+      ['2020-06-14', 'c2B', 'c3B', 2], # Group 5
+
+      ['2020-06-15', 'c2C', 'c3C', 3],
+    ], columns=['a_date', 'col2', 'col3', 'col4'])
+    .assign(a_date=lambda df: pd.to_datetime(df.a_date))
+    .sample(frac=1)  # Shuffle the input
+  )
+  .transform(
+    lambda df: df.join(
+      df
+      .select('a_date', 'col2', 'col3')
+      .withColumn('first_in_group',
+                  f.col('col3') != f.lag('col3', default='first').over(Window.partitionBy('col2').orderBy('a_date')))
+      .filter(f.col('first_in_group'))
+      .drop('first_in_group')
+      .withColumn("group_id", f.row_number().over(Window().orderBy('a_date'))),
+      on=['a_date', 'col2', 'col3'],
+      how='left'
+    )
+    # Then do a forward fill of the id_col
+    .withColumn('group_id',
+                f.last('group_id', ignorenulls=True).over(Window.orderBy("a_date").partitionBy('col2', 'col3')))
+  )
+  .orderBy('a_date', 'col2', 'col3')
+)

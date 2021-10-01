@@ -262,3 +262,17 @@ df.groupby('typ').apply(mult_id, (3), (4))
 # Get a sorted side-by-side view of lists that are not the same length
 test_data = dict(a=[1, 2, 3], b=['a', 'b', 'c', 'd'], c=[7])
 pd.DataFrame({key: pd.Series(sorted(lst)) for key, lst in test_data.items()}).fillna('')
+
+# Format output strings
+# Single column
+(
+  pd.DataFrame(dict(col1=[1.234, 123.456, 0.1234567]))
+  .assign(col2=lambda df: df.col1.apply("{0:.2f}".format))
+)
+
+# Every column in the dataframe
+(
+  pd.DataFrame(dict(col1=[1.234, 123.456, 0.1234567]))
+  .assign(col2=lambda df: 1.277*df.col1)
+  .applymap("{0:1.2f}".format)
+)

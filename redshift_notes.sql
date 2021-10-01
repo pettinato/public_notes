@@ -1,3 +1,4 @@
+-- Status of running queries
 SELECT pid,
        status,
        user_name,

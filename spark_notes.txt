@@ -479,3 +479,28 @@ display(
   )
   .orderBy('a_date', 'col2', 'col3')
 )
+
+
+# groupby rolling distinct count
+# currently doesn't support countDistinct
+from pyspark.sql.window import Window
+
+#create some test data
+df = spark.createDataFrame(
+  [(1, 'id1', 'G1'),
+   (2, 'id2', 'G1'),
+   (3, 'id1', 'G2'),
+   (4, 'id1', 'G2'),
+   (5, 'id2', 'G2'),
+   (6, 'id3', 'G2'),
+  ],
+  ["order_col", "id_col", "group_col"])
+
+count_window = (
+  Window.orderBy('order_col').partitionBy('group_col')
+  .rangeBetween(Window.unboundedPreceding, 0)
+)
+
+display(
+  df.withColumn('rolling_distinct_id_count', f.approx_count_distinct('id_col').over(count_window))
+)

@@ -1,26 +1,32 @@
 
-# Turn off buffering in python to allow fast printing to stdout
-alias python='python -u'
 
-# Using pep8 with 100 chars per line
-alias pep8='pep8 --max-line-length=100'
+# Useful Aliases
+## Colorize the ls output ##
+alias ls="ls -G"
+## Use a long listing format ##
+# alias ll="ls -Gltraah"  Trying the below to do better with sorting.
+alias ll="gls --color -l -a -h"
 
-#Always show color and always show filename
-alias grep='grep --color=always -H'
+# Always use color
+alias less="less -R"
 
-#Absolute path of current directory for bash prompt
-PS1='\w\$ '
+# TODO enhance this one
+#alias diff="colordiff"
 
-#virtual environment commands such as workon
-source /usr/local/bin/virtualenvwrapper.sh
+alias grep="grep --color=auto -H"
+
+# Linux Aliases - need to run through ./brew_notes.txt first
+alias sed="gsed"
+alias which="gwhich"
+
+#Always show color and always show filename - sometimes helpful
+#alias grep='grep --color=always -H'
 
 #Update ls colors to be more readable
 export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
 
-#AWS configuration for command aws
-export AWS_CONFIG_FILE=$HOME/.aws/config
-
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH
+# Update prompt to just be the basename of the current directory
+export PS1="\w \\$ \[$(tput sgr0)\]"
 
 # Long bash history.
 # ---------------------
@@ -35,14 +41,17 @@ export HISTTIMEFORMAT="[%F %T] "
 export HISTFILE=~/.bash_command_history
 # Force prompt to write history after every command.
 # http://superuser.com/questions/20900/bash-history-loss
-PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+# This might be slow
+#PROMPT_COMMAND="history -a; history -n"
 
-# Setting PATH for Python 3.6
-# The original version is saved in .bash_profile.pysave
-PATH="/Library/Frameworks/Python.framework/Versions/3.6/bin:${PATH}"
-export PATH
+# Add git magic to the prompt
+# https://github.com/magicmonty/bash-git-prompt
+if [ -f "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh" ]; then
+  __GIT_PROMPT_DIR=$(brew --prefix)/opt/bash-git-prompt/share
+  GIT_PROMPT_ONLY_IN_REPO=1
+  source "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh"
+fi
 
-# Setting PATH for Python 3.5
-# The original version is saved in .bash_profile.pysave
-PATH="/Library/Frameworks/Python.framework/Versions/3.5/bin:${PATH}"
-export PATH
+# Brew -> "Homebrew's sbin was not found in your PATH but you have installed formulae that put executables in /usr/local/sbin."
+PATH="/usr/local/sbin:$PATH"
+

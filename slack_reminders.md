@@ -2,16 +2,16 @@
 
 ## Weekly
 1. Post something helpful to slack
-  * Friday Morning
+   * Friday Morning
 2. Company Values
-  * Monday Morning
+   * Monday Morning
 3. Delegate, let junior folks contribute more in meetings
-  * Random-ish time
+   * Random-ish time
 4. Use Inclusive Vocabulary
-  1. Use vocabulary "blocklist" and "safelist"
-    * Random-ish time
-  2. Ask “How Come instead of Why”
-    * Random-ish time
+   1. Use vocabulary "blocklist" and "safelist"
+      * Random-ish time
+   2. Ask “How Come instead of Why”
+      * Random-ish time
 
 ## Monthly
 1. setup softlink directory `mkdir ~/Archive/2017/April && ln -s ~/Archive/2017/April/ ~/April && unlink ~/March`

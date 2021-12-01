@@ -1,3 +1,5 @@
+# https://brew.sh/ for installation
+
 brew cask install pycharm-ce
 brew cask install dbeaver-community
 brew install jq

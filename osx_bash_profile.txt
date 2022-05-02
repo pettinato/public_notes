@@ -26,6 +26,7 @@ alias which="gwhich"
 export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
 
 # Update prompt to just be the basename of the current directory
+# https://bashrcgenerator.com/
 export PS1="\w \\$ \[$(tput sgr0)\]"
 
 # Long bash history.
@@ -45,12 +46,18 @@ export HISTFILE=~/.bash_command_history
 #PROMPT_COMMAND="history -a; history -n"
 
 # Add git magic to the prompt
+# For zsh
+# brew install zsh-git-prompt
+# 
+
+# This is for bash
 # https://github.com/magicmonty/bash-git-prompt
-if [ -f "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh" ]; then
-  __GIT_PROMPT_DIR=$(brew --prefix)/opt/bash-git-prompt/share
-  GIT_PROMPT_ONLY_IN_REPO=1
-  source "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh"
-fi
+# brew install bash-git-prompt
+# if [ -f "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh" ]; then
+#   __GIT_PROMPT_DIR=$(brew --prefix)/opt/bash-git-prompt/share
+#   GIT_PROMPT_ONLY_IN_REPO=1
+#   source "$(brew --prefix)/opt/bash-git-prompt/share/gitprompt.sh"
+# fi
 
 # Brew -> "Homebrew's sbin was not found in your PATH but you have installed formulae that put executables in /usr/local/sbin."
 PATH="/usr/local/sbin:$PATH"

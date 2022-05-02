@@ -34,13 +34,13 @@ Use pip as conda can't install directly from github.
 1. Activate your virtual environment via `source activate YOUR_ENV_NAME`
 2. Install from master branch
 ```
-pip install git+ssh://git@github.com/ThriveMarket/module_repo_name.git
+pip install git+ssh://git@github.com/Something/module_repo_name.git
 ```
 This could also be placed into a `requirements.txt` file and installed via `pip install -r requirements.txt`.
 
 3. Optional: Install from a custom branch
 ```
-pip install git+ssh://git@github.com/ThriveMarket/module_repo_name.git@BRANCH_NAME_HERE
+pip install git+ssh://git@github.com/Something/module_repo_name.git@BRANCH_NAME_HERE
 ```
 
 4. Import such as

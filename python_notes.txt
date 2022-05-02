@@ -91,3 +91,7 @@ Steps
 1. Run the test, it fails
 2. Run-Edit Configurations
 3. Select failing test and change "Working Directory"
+
+# Path to my python executable
+import sys
+sys.executable

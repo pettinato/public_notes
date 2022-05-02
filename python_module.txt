@@ -106,9 +106,9 @@ pre-commit run --all-files
 ```
 
 ## Linting and pep8 manually
-This uses `flake8` to check for style and linting issues.  This can be run manually via
+This uses `pylint` to check for style and linting issues.  This can be run manually via
 ```
-flake8 --config setup.cfg
+pylint --config setup.cfg
 ```
 
 ## Coverage
@@ -139,7 +139,7 @@ repos:
 
 
 ##### setup.cfg ##### ##### ##### ##### ##### ##### #####
-[flake8]
+[pycodestyle]
 max-line-length = 120
 exclude = tests/*
 

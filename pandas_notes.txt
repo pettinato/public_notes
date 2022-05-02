@@ -6,7 +6,7 @@ pd.options.display.max_colwidth=100
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_columns', 20)
 pd.set_option('max_colwidth', 800)
-#pd.set_option('max_rows', 1000) # Sometimes helpful
+#pd.set_option('display.max_rows', 1000) # Sometimes helpful
 
 # Transform single column
 # Where foo is a function or a lambda function
@@ -276,3 +276,18 @@ pd.DataFrame({key: pd.Series(sorted(lst)) for key, lst in test_data.items()}).fi
   .assign(col2=lambda df: 1.277*df.col1)
   .applymap("{0:1.2f}".format)
 )
+
+# Cumsum reset on null
+def cumsum_reset_on_null(srs: pd.Series) -> pd.Series:
+    """
+    For a pandas series with null values,
+    do a cumsum and reset the cumulative sum when a null value is encountered.
+    Example)
+      input:  [1, 1, np.nan, 1, 2, 3, np.nan, 1, np.nan]
+      return: [1, 2, 0,      1, 3, 6, 0,      1,      0]
+    """
+    cumulative = srs.cumsum().fillna(method='ffill')
+    restart = ((cumulative * srs.isnull()).replace(0.0, np.nan)
+               .fillna(method='ffill').fillna(0))
+    result = (cumulative - restart)
+    return result.replace(0, np.nan)

@@ -89,3 +89,5 @@ session_token '<temporary-token>';
 -- What tables and schemas are available?
 SELECT ist.table_schema, ist.table_name
 FROM information_schema.tables AS ist;
+
+

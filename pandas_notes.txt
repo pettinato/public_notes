@@ -291,3 +291,20 @@ def cumsum_reset_on_null(srs: pd.Series) -> pd.Series:
                .fillna(method='ffill').fillna(0))
     result = (cumulative - restart)
     return result.replace(0, np.nan)
+
+
+# Custom describe - print row counts, unique counts and null counts for each column
+print(f"Row Count: {data_df.shape[0]}")
+
+def custom_describe(df):
+    """return dataframe with rows as columns and columns as descriptive counts"""
+    return (
+        pd.DataFrame([dict(
+            col=acol,
+            unique_count=df[acol].nunique(),
+            non_null_count=df[(~df[acol].isnull()) & (~df[acol].isna())].shape[0],
+            null_count=df[(df[acol].isnull()) | (df[acol].isna())].shape[0],
+        )
+        for acol in df.columns])
+        .assign(pct_null=lambda adf: 100 * adf.null_count / (df.shape[0]))
+    )

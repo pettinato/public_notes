@@ -7,3 +7,49 @@ import boto3
 client = boto3.client('s3')
 print("Role: ", boto3.client('sts').get_caller_identity()['Arn'])
 print('\n'.join([item['Key'] for item in client.list_objects_v2(Bucket='s3-datascience-na')['Contents']]))
+
+# Write to S3
+(
+    test_df
+    .write
+    .format("delta")
+    .save(s3_table_location)
+)
+
+# Read from S3
+display(
+    test_df
+    .read
+    .format('delta')
+    .mode('overwrite')
+    .load(s3_table_location)
+)
+# Query Redshift
+jdbc_url = "jdbc:redshift://{redshift_host}:{redshift_port}/{redshift_db};UID={redshift_user};PWD={redshift_password}".format(
+    redshift_host=dbutils.secrets.get(scope=secret_scope, key="redshift_host"),
+    redshift_db=dbutils.secrets.get(scope=secret_scope, key="redshift_db"),
+    redshift_port=dbutils.secrets.get(scope=secret_scope, key="redshift_port"),
+    redshift_user=dbutils.secrets.get(scope=secret_scope, key="redshift_user"),
+    redshift_password=dbutils.secrets.get(scope=secret_scope, key="redshift_password"),
+)
+
+display(
+    spark.read
+    .format("com.databricks.spark.redshift")
+    .option("forward_spark_s3_credentials", True)
+    .option("url", jdbc_url)
+    .option("query", "select top 10 * from postgres.companies")
+    .option("tempdir", s3_temp_dir)
+    .load()
+)
+
+# Tracking cost?
+
+There is a CSV that can be automatically uploaded to your S3 bucket daily by doing some API calls.
+This CSV contains an itemized table of job runs/cluster instances and their machine hours/DBUs.
+
+The final thing you can do is map the machineHours field from that CSV by joining the instanceType field to the appropriate hourly cost of the EC2 instances.
+The only difficulty is that you need to account for EBS volume size but this is probably uniform across your databricks clusters. This allows getting the
+actual prices of the ec2 instances that AWS charges. Use this here to get some prices https://ec2instances.info
+
+This might help too https://github.com/templed/ec2-instances-sql

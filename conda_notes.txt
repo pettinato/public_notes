@@ -43,6 +43,9 @@ conda install -n myenv ipykernel
 source activate myenv
 python -m ipykernel install --user --name myenv --display-name "MyEnv_Hello_World"
 
+# Other route is to use nb_conda_kernels
+# https://towardsdatascience.com/get-your-conda-environment-to-show-in-jupyter-notebooks-the-easy-way-17010b76e874
+
 # Remove kernel from Jupyter notebook
 jupyter kernelspec uninstall myenv
 

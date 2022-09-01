@@ -109,3 +109,60 @@ class TestPOC(unittest.TestCase):
         ], columns=['col1', 'col2'])
 
         assert_frame_equal(output_df, exp_df)
+        
+        
+################################# Update #################################
+What version of PySpark do you want?
+    Open a notebook attached to the cluster you are using for development.
+    Ideally the DataBricks runtime would be the newest LTS version
+    Run `import pyspark; pyspark.version` to get the version of pyspark you want to use for local development
+    Then install
+        `pip install pyspark==abcdef pytest==abcdef`
+        Be sure to track the versions in the codebase/repo!
+
+Install Java `brew install --cask temurin8`
+
+Make directory tests/ with a file called conftest.py with contents,
+
+"""
+This file is names conftest.py to be automatically imported by pytest
+This filename conftest.py is pytest specific and will auto load the fixtures.
+"""
+
+import pytest
+from pyspark.sql import SparkSession
+
+
+@pytest.fixture(scope="session")
+def spark():
+    """
+    Use session in the fixture in order to persist this object beyond a single test
+    :return: a Spark Session object
+    """
+    return SparkSession.builder.master("local").appName("app_test").getOrCreate()
+
+
+Make a test file in directory tests/ or any sub directory with a file containing
+
+import pytest
+import unittest
+import pandas as pd
+from pandas.testing import assert_frame_equal
+
+
+class TestFoo(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def prepare_fixture(self, spark):
+        self.spark = spark
+
+    def test_foo(self):
+        """Test that the spark pytest fixture and unittest work together"""
+        spark_df = self.spark.createDataFrame(pd.DataFrame(dict(col1=['a', 'b', 'c'], col2=[1, 2, 3])))
+        result_df = pd.DataFrame(dict(col1=['a', 'b', 'c'], col2=[1, 2, 3]))
+        assert_frame_equal(spark_df.toPandas()[['col1', 'col2']].sort_values('col1').reset_index(),
+                           result_df[['col1', 'col2']].sort_values('col1').reset_index())
+        self.assertTrue(True)
+
+This is just a base example test with unittest classes. It runs via pytest and auto starts up spark.
+:note: unittest.TestCase does not have to be used, it’s just a nice to have as there are existing comparison functions other than just assert.
+:construction: There are a few different methods of achieving the same result of using spark locally for development. Choose whatever you want, just be sure to document the setup so that a new person can onboard quickly.

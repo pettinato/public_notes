@@ -53,3 +53,9 @@ The only difficulty is that you need to account for EBS volume size but this is 
 actual prices of the ec2 instances that AWS charges. Use this here to get some prices https://ec2instances.info
 
 This might help too https://github.com/templed/ec2-instances-sql
+
+
+# Can be good to store wheels in s3 or dbfs
+# Using the pip install here as the wheel keeps changing during this development
+# In the notebook the wheel can be re-installed via
+%pip install /dbfs/project-env-py3-none-any.whl

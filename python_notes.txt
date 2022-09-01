@@ -95,3 +95,24 @@ Steps
 # Path to my python executable
 import sys
 sys.executable
+
+
+""" Read a file directly from s3 as bytes """
+"""Example with parquet file"""
+import pandas as pd
+import boto3
+from io import BytesIO
+client = boto3.session.Session().client("s3")
+obj = client.get_object(Bucket=bucket, Key=parquet_file)['Body'].read()
+pd.read_parquet(BytesIO(obj))
+
+"""Example with XGBoost model"""
+import boto3
+from io import BytesIO
+import xgboost as xgb
+client = boto3.session.Session().client("s3")
+obj = client.get_object(Bucket=bucket, Key=model_file_in_s3)['Body'].read()
+xgb_model = xgb.Booster()
+xgb_model.load_model(bytearray(BytesIO(obj).read()))
+print(type(xgb_model))
+print(xgb_model.attributes())

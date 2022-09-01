@@ -222,7 +222,8 @@ df = (
   .write
   .partitionBy(*partition_cols)
   .format('parquet')
-  .mode('append')
+  .option('compression', 'gzip')
+  .mode('append')  # overwrite
   .save(s3_loc)
 )
 

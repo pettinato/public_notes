@@ -98,6 +98,7 @@ x.apply(add, i2=9)
 
 # Conditional set a column value for some rows
 df = pd.DataFrame(dict(position=[1,2,3,4,5,6], b=[False]*6))
+df.loc[df.position >= 3, 'b'] = True  # <- BEST
 df.loc[df[df.position >= 3].index, 'b'] = True  # <- BETTER
 df.iloc[df[df.position >= 3].index, df.columns.get_loc('b')] = True
 

@@ -59,3 +59,38 @@ This might help too https://github.com/templed/ec2-instances-sql
 # Using the pip install here as the wheel keeps changing during this development
 # In the notebook the wheel can be re-installed via
 %pip install /dbfs/project-env-py3-none-any.whl
+
+
+def recurse_dbutils_fs_ls(s3dir):
+    """
+    Recursive ls of s3 directory using dbutils
+    :param s3dir: The s3 prefix to iterate through
+    :return: Iterator of all files with that prefix
+    """
+    import itertools
+    results = dbutils.fs.ls(s3dir)
+    if len(results) == 1 and results[0].path == s3dir:
+        # Base case here
+        yield results[0]
+    else:
+        result_paths = map(lambda result: result.path, results)
+        for item in itertools.chain.from_iterable(map(recurse_dbutils_fs_ls, result_paths)):
+            yield item
+
+dbutils.fs.ls size is in bytes
+To get the GB Size for a single file
+size_gb = dbutils.fs.ls('s3://stuff.json')[0] / (1024*1024*1024)
+
+# When creating a parquet table from data in s3
+# use "ALTER TABLE schema.tablename RECOVER PARTITIONS" to determine the partitions
+# otherwise partitioned tables will all return empty queries
+# like
+
+CREATE TABLE aschema.atable
+USING PARQUET
+LOCATION 's3://bucket/path/';
+SELECT * FROM aschema.atable;  # will ALWAYS be empty if the directory is partitioned like 's3://bucket/path/stuff=hello/'
+-- Then run
+ALTER TABLE aschema.atable RECOVER PARTITIONS;
+SELECT * FROM aschema.atable; -- will work!
+# MSCK REPAIR TABLE aschema.atable; works too

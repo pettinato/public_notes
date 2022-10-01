@@ -116,3 +116,26 @@ xgb_model = xgb.Booster()
 xgb_model.load_model(bytearray(BytesIO(obj).read()))
 print(type(xgb_model))
 print(xgb_model.attributes())
+
+
+# Iterate over a iterable in chunks
+import itertools
+x = list(range(100))
+
+def grouper(iterable, n):
+    """n is the size of the chunks you want"""
+    args = [iter(iterable)] * n
+    # zip_longest makes the last chunk of size n with None used as filler
+    return itertools.zip_longest(*args)
+
+for grp in grouper(x, 11):
+    # Remove the None before processing
+    clean_grp = [item for item in grp if item is not None]
+    print(f"Group: {clean_grp}")
+
+# Boto3 get the size of a single directory in s3
+import boto3
+bucket = "a_bucket"
+s3_dir = "an_s3_dir"
+bucket_resource = boto3.resource("s3").Bucket(bucket)
+dir_size = sum(map(lambda item: item.size, bucket_resource.objects.filter(Prefix=s3_dir).all()))

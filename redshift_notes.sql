@@ -90,4 +90,17 @@ session_token '<temporary-token>';
 SELECT ist.table_schema, ist.table_name
 FROM information_schema.tables AS ist;
 
+-- What are my recent queries?
+SELECT TOP 5 *
+FROM STL_QUERY
+WHERE userid = CURRENT_USER_ID
+ORDER BY starttime DESC
+;
 
+-- What users are in a group?
+select usename
+from pg_user , pg_group
+where pg_user.usesysid = ANY(pg_group.grolist) and
+      pg_group.groname='<YOUR_GROUP_NAME>';
+
+-- What permissions does a group have on a partcicular table?

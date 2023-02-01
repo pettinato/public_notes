@@ -139,3 +139,18 @@ bucket = "a_bucket"
 s3_dir = "an_s3_dir"
 bucket_resource = boto3.resource("s3").Bucket(bucket)
 dir_size = sum(map(lambda item: item.size, bucket_resource.objects.filter(Prefix=s3_dir).all()))
+
+# Helper to delete extra AWS Glue tables - assumes credentials are setup as standard
+from boto3.session import Session
+glue_client = Session().client("glue")
+def del_tables_in_db(db_name, loop_count=10):
+  for i in range(loop_count):
+    print(f"{db_name}: Running loop {i} of {loop_count} to delete all tables in the database")
+    # MaxResults > 100 doesn't work
+    tbls = [tbl['Name'] for tbl in glue_client.get_tables(DatabaseName=db_name, MaxResults=100)['TableList']]
+    if len(tbls) == 0:
+        print(f'{db_name}: No Tables to Delete')
+        break
+    else:
+        print(f'{db_name}: Deleting {len(tbls)} tables')
+        glue_client.batch_delete_table(DatabaseName=db_name, TablesToDelete=tbls)

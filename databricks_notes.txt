@@ -94,3 +94,31 @@ SELECT * FROM aschema.atable;  # will ALWAYS be empty if the directory is partit
 ALTER TABLE aschema.atable RECOVER PARTITIONS;
 SELECT * FROM aschema.atable; -- will work!
 # MSCK REPAIR TABLE aschema.atable; works too
+
+
+
+
+@patch("data_processing.lib.aws_utils.s3fs")
+def test_s3_list_dir_glob(mock_s3fs):
+    """basic test"""
+    mock_s3fs.S3FileSystem.return_value.glob.return_value = [
+        "bucket12/stuff/p1/hello/world.parquet", "bucket12/stuff/p1/hello/earth.parquet",
+        "bucket12/stuff/p2/hello/world.parquet", "bucket12/stuff/p2/hello/world.parquet"]
+    result = s3_list_dir_glob("*/glob/*/", 'thebucket')
+    exp_result = ["stuff/p1/hello/world.parquet", "stuff/p1/hello/earth.parquet",
+                  "stuff/p2/hello/world.parquet", "stuff/p2/hello/world.parquet"]
+    assert set(result) == set(exp_result)
+    mock_s3fs.S3FileSystem.assert_called_once()
+    mock_s3fs.S3FileSystem.return_value.glob.assert_called_once_with("s3://thebucket/*/glob/*/")
+
+def s3_list_dir_glob(bucket: str, glob_path: str, ) -> List[str]:
+    """
+    Glob a s3 path and return all found paths
+    :param bucket: S3 Bucket
+    :param glob_path: An s3 prefix path suitable for globbing like stuff/*/otherstuff/*.parquet
+       does not include the s3://bucket/
+    :return: A list of prefixes (i.e. bucket is not in the output)
+    """
+    glob_result = s3fs.S3FileSystem().glob(f"s3://{PurePosixPath(bucket, glob_path)}")
+    # Result is like "bucket/glob_path/" so wipe out the bucket/ to return just the paths found
+    return [str(PurePosixPath(*PurePosixPath(apath).parts[1:])) for apath in glob_result]

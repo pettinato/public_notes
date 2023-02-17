@@ -1,7 +1,7 @@
 # https://brew.sh/ for installation
 
-brew cask install pycharm-ce
-brew cask install dbeaver-community
+brew install pycharm-ce
+brew install dbeaver-community
 brew install jq
 
 brew install findutils

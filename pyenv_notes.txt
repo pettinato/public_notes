@@ -1,0 +1,41 @@
+brew update
+brew install pyenv
+brew install pyenv-virtualenv
+
+# Install a python version in order to make any virtual environments from it
+pyenv install <PYTHON VERSION FOR THE PROJECT LIKE 3.10.8>
+pyenv install 3.10.8
+
+# Set the global python environment
+pyenv global 3.10.8
+
+# create a virtual environment for project named shoelace
+pyenv virtualenv 3.10.0 shoelace
+
+# In the project directory "shoelace" set the virtual environment
+pyenv local shoelace
+
+# Check stuff
+pyenv which pip
+pyenv which python
+ll ~/.pyenv/versions
+python -c "import sys; print(sys.executable)"
+python -c "import pandas; print(pandas.__file__)"
+
+# Then in pycharm
+~/.pyenv/versions/project-virtualenv-name/bin/python
+
+# Install something
+# Switch to the virtual environment
+pyenv activate adhoc
+pip install s3fs
+
+
+# Misc maybe useful ??? - Seems to auto apply a virtual environment, but doesn't show it in the path.
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+echo project-virtualenv-name > project_folder/.python-version

@@ -96,6 +96,10 @@ Steps
 import sys
 sys.executable
 
+# Pull the version of python from sys
+import sys
+sys.version
+
 
 """ Read a file directly from s3 as bytes """
 """Example with parquet file"""

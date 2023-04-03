@@ -10,7 +10,10 @@ pyenv install 3.10.8
 pyenv global 3.10.8
 
 # create a virtual environment for project named shoelace
-pyenv virtualenv 3.10.0 shoelace
+pyenv virtualenv 3.10.0 project-virtualenv-name
+
+# Set the virtualenv for the directory/project
+echo project-virtualenv-name > project_folder/.python-version
 
 # In the project directory "shoelace" set the virtual environment
 pyenv local shoelace
@@ -37,5 +40,3 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
-
-echo project-virtualenv-name > project_folder/.python-version

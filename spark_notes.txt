@@ -505,3 +505,9 @@ count_window = (
 display(
   df.withColumn('rolling_distinct_id_count', f.approx_count_distinct('id_col').over(count_window))
 )
+
+## unionByName a list of dataframes to get one combined dataframe
+raw_df = list(itertools.accumulate(
+    list_of_spark_dfs,
+    lambda df1, df2: df1.unionByName(df2)
+))[-1]

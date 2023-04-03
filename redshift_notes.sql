@@ -108,3 +108,41 @@ where pg_user.usesysid = ANY(pg_group.grolist) and
       pg_group.groname='<YOUR_GROUP_NAME>';
 
 -- What permissions does a group have on a partcicular table?
+     
+     
+-- What's the size of a table in Redshift?
+SELECT "schema", "table", "size" AS size_mb, "size" / 1024 AS size_gb , tbl_rows 
+FROM SVV_TABLE_INFO
+WHERE "table" = 'the_tablename'
+AND "schema" = 'the_schema';
+
+
+-- Pull duration/GBs for queries run in the last 2 days
+-- Used to find queries that are draining Redshift resources
+SELECT q.query,
+       q.endtime - q.starttime             AS duration,
+       SUM(( bytes ) / 1024 / 1024 / 1024) AS GigaBytes,
+       aborted,
+       q.querytxt
+FROM   stl_query q
+       join svl_query_summary qs
+         ON qs.query = q.query
+WHERE  qs.is_diskbased = 't'
+       AND q.starttime BETWEEN SYSDATE - 2 AND SYSDATE
+GROUP  BY q.query,
+          q.querytxt,
+          duration,
+          aborted
+ORDER  BY gigabytes DESC
+;
+
+-- What external tables and schemas are available?
+SELECT schemaname, tablename
+FROM SVV_EXTERNAL_TABLES
+;
+
+-- What columns are available
+SELECT *
+FROM information_schema.columns
+;
+

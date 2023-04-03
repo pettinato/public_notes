@@ -309,3 +309,19 @@ def custom_describe(df):
         for acol in df.columns])
         .assign(pct_null=lambda adf: 100 * adf.null_count / (df.shape[0]))
     )
+
+
+# Converting from datetime64[ns, UTC] -> datetime64[ns] without changing the string represented time,
+# i.e. datetime64[ns, UTC] '2022-01-01 10:11:12' -> datetime64[ns] '2022-01-01 10:11:12'
+pd.to_datetime(pd.Series(['2022-01-01 10:11:12', '2022-01-01 11:12:13']), utc=True)
+Out[12]:
+0   2022-01-01 10:11:12+00:00
+1   2022-01-01 11:12:13+00:00
+dtype: datetime64[ns, UTC]
+
+# Strips out the timezone information and prints it out in "local" time
+pd.to_datetime(pd.Series(['2022-01-01 10:11:12', '2022-01-01 11:12:13']), utc=True).dt.tz_localize(None)
+Out[11]:
+0   2022-01-01 10:11:12
+1   2022-01-01 11:12:13
+dtype: datetime64[ns]

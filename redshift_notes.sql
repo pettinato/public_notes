@@ -87,8 +87,8 @@ secret_access_key '<secret-access-key>'
 session_token '<temporary-token>';
 
 -- What tables and schemas are available?
-SELECT ist.table_schema, ist.table_name
-FROM information_schema.tables AS ist;
+SELECT table_schema, table_name
+FROM information_schema.tables;
 
 -- What external tables and schemas are available?
 SELECT schemaname, tablename
@@ -136,10 +136,6 @@ GROUP  BY q.query,
 ORDER  BY gigabytes DESC
 ;
 
--- What external tables and schemas are available?
-SELECT schemaname, tablename
-FROM SVV_EXTERNAL_TABLES
-;
 
 -- What columns are available
 SELECT *

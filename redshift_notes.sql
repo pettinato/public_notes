@@ -94,6 +94,19 @@ FROM information_schema.tables;
 SELECT schemaname, tablename
 FROM SVV_EXTERNAL_TABLES;
 
+-- What tables and schemas are available? - Written as a sub query to help with extending with filters
+SELECT *
+FROM (
+	SELECT table_schema, table_name, is_ext
+	FROM (SELECT table_schema, table_name, FALSE AS is_ext FROM information_schema.tables)
+	UNION (SELECT schemaname AS table_schema, tablename AS table_name, TRUE AS is_ext FROM SVV_EXTERNAL_TABLES)
+)
+;
+
+-- What external tables and schemas are available?
+SELECT schemaname, tablename
+FROM SVV_EXTERNAL_TABLES;
+
 -- What are my recent queries?
 SELECT TOP 5 *
 FROM STL_QUERY

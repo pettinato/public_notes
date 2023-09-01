@@ -6,7 +6,7 @@ SELECT pid,
        query
 FROM stv_recents
 WHERE status = 'Running'
---AND user_name 'stephenpettinato';
+--AND user_name = 'stephenpettinato';
 
 user_name IN ('auername','stephenpettinato');
 
@@ -154,4 +154,5 @@ ORDER  BY gigabytes DESC
 SELECT *
 FROM information_schema.columns
 ;
+
 

@@ -511,3 +511,13 @@ raw_df = list(itertools.accumulate(
     list_of_spark_dfs,
     lambda df1, df2: df1.unionByName(df2)
 ))[-1]
+
+# Parse json column
+parsed_df = (
+    data_df
+    # TODO this can't guarantee that the schema is a valid one, consider taking the longest JSON column to derive the schema
+    .transform(lambda df:
+        df.withColumn('lines_json',
+                      f.from_json('some_json_column', f.schema_of_json(df.select('some_json_column').collect()[0][0])))
+    )
+)

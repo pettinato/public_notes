@@ -103,10 +103,6 @@ FROM (
 )
 ;
 
--- What external tables and schemas are available?
-SELECT schemaname, tablename
-FROM SVV_EXTERNAL_TABLES;
-
 -- What are my recent queries?
 SELECT TOP 5 *
 FROM STL_QUERY

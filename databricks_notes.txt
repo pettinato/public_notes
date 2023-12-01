@@ -122,3 +122,14 @@ def s3_list_dir_glob(bucket: str, glob_path: str, ) -> List[str]:
     glob_result = s3fs.S3FileSystem().glob(f"s3://{PurePosixPath(bucket, glob_path)}")
     # Result is like "bucket/glob_path/" so wipe out the bucket/ to return just the paths found
     return [str(PurePosixPath(*PurePosixPath(apath).parts[1:])) for apath in glob_result]
+
+
+def dbutils_s3_path_exists(a_path):
+    try:
+        dbutils.fs.ls(a_path)
+        return True
+    except Exception as e:
+        if 'java.io.FileNotFoundException' in str(e):
+            return False
+        else:
+            raise

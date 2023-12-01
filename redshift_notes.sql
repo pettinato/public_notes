@@ -151,4 +151,15 @@ SELECT *
 FROM information_schema.columns
 ;
 
+-- Pull a recent type of query run
+SELECT TOP 50 usr.usename, qry.querytxt, qry.DATABASE, qry.starttime, qry.endtime, qry.aborted
+FROM STL_QUERY AS qry
+LEFT OUTER JOIN SVL_USER_INFO AS usr ON qry.userid = usr.usesysid
+WHERE qry.querytxt ILIKE '%create table%'
+ORDER BY qry.starttime DESC
+;
+
+
+
+
 

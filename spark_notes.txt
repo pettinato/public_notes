@@ -521,3 +521,20 @@ parsed_df = (
                       f.from_json('some_json_column', f.schema_of_json(df.select('some_json_column').collect()[0][0])))
     )
 )
+
+# Vacuum with 0 retention
+from delta.tables import DeltaTable
+spark.conf.set('spark.databricks.delta.retentionDurationCheck.enabled', 'false')
+DeltaTable.forPath(spark, temp_dir).vacuum(0)
+spark.conf.set('spark.databricks.delta.retentionDurationCheck.enabled', 'true')
+
+# Get some example rows - NOT a sample, but good enough for development
+data_df = (
+    spark.read.format('delta').load(file_contents_path)
+    .transform(
+        lambda df: {
+            False: df,
+            True: spark.createDataFrame(df.take(1_000), schema=df.schema).cache()
+        }[debug]
+    )
+)

@@ -162,3 +162,15 @@ def del_tables_in_db(db_name, loop_count=10):
 Format String
 x = 88.5435432142
 print(f"x formatted = {x:.2f}")
+
+# Sum of a directory in s3
+import s3fs
+s3fs_fs = s3fs.S3FileSystem()
+
+# Sum in GBs
+sum([
+    s3fs_fs.size(item) / (1024*1024*1024)
+    for item in s3fs_fs.glob('s3://some_bucket/subdir/subdir2/**')
+    if item.endswith(".parquet")
+    and "_delta_log" not in item  # If it's a delta table
+])

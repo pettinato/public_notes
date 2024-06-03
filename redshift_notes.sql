@@ -160,6 +160,20 @@ ORDER BY qry.starttime DESC
 ;
 
 
+-- What external tables and schemas are available?
+SELECT count(*)
+FROM SVV_EXTERNAL_TABLES
+WHERE schemaname = 'ext_homebase1';
 
+-- Unload to s3 using an IAM role and a temp table
+CREATE TEMPORARY TABLE schema_table 
+AS (
+  SELECT * FROM SCHEMA.table
+);
 
-
+unload ('SELECT * FROM schema_table')
+to 's3://BUCKET/prefix'
+parallel OFF
+PARQUET
+iam_role 'arn:aws:iam::something:role/somethingelse'
+;

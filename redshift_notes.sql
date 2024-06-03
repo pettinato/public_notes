@@ -163,7 +163,7 @@ ORDER BY qry.starttime DESC
 -- What external tables and schemas are available?
 SELECT count(*)
 FROM SVV_EXTERNAL_TABLES
-WHERE schemaname = 'ext_homebase1';
+WHERE schemaname = 'some_schema';
 
 -- Unload to s3 using an IAM role and a temp table
 CREATE TEMPORARY TABLE schema_table 

@@ -133,3 +133,7 @@ def dbutils_s3_path_exists(a_path):
             return False
         else:
             raise
+
+
+# reference a delta path in a sql statement as delta.`s3://path/here/`
+spark.sql(f"ANALYZE TABLE delta.`s3://path/here/` COMPUTE DELTA STATISTICS")

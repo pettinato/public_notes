@@ -506,6 +506,48 @@ display(
   df.withColumn('rolling_distinct_id_count', f.approx_count_distinct('id_col').over(count_window))
 )
 
+# Example of rolling sum over a date column
+
+from pyspark.sql import functions as f
+from pyspark.sql.window import Window
+import pandas as pd
+
+rolling_days = 3
+rolling_secs = rolling_days * 24 * 60 * 60
+
+#create some test data
+df = (
+    spark.createDataFrame(
+        pd.DataFrame([
+            ['2024-06-01T12:00:00.000+00:00', 'id1', 1], # 1
+            ['2024-06-02T13:00:00.000+00:00', 'id1', 2], # 3
+            ['2024-06-03T14:00:00.000+00:00', 'id1', 3], # 6
+            ['2024-06-05T11:00:00.000+00:00', 'id1', 5], # 10
+            ['2024-06-06T10:00:00.000+00:00', 'id1', 6], # 14
+
+            ['2024-06-01T12:00:00.000+00:00', 'id2', 7], # 7
+            ['2024-06-02T13:00:00.000+00:00', 'id2', 8], # 15
+            ['2024-06-10T12:00:00.000+00:00', 'id2', 9], # 9
+            ], columns=["order_col", "id_col", "sum_col"]
+        )
+        .assign(order_col=lambda df: pd.to_datetime(df.order_col))
+    )
+    .withColumn('order_col_sec', f.unix_timestamp('order_col'))
+)
+# df.show()
+
+rolling_sum_window = (
+  Window
+  .orderBy('order_col_sec')
+  .partitionBy('id_col')
+  .rangeBetween(-rolling_secs, 0)
+)
+
+display(
+  df
+  .withColumn('rolling_sum', f.sum('sum_col').over(rolling_sum_window))
+)
+
 ## unionByName a list of dataframes to get one combined dataframe
 raw_df = list(itertools.accumulate(
     list_of_spark_dfs,

@@ -653,3 +653,8 @@ df.show() # Will return this
 |      2|2023-03-01 11:00:00|2023-03-01 11:10:00|                  600|
 |      2|2023-03-01 11:10:00|               null|                 null|
 +-------+-------------------+-------------------+---------------------+
+
+# Extract from a JSON column when the key contains a period
+f.get_json_object("some_json_field", '$["start.after_period"]')
+Without the period it's just like
+f.get_json_object("some_json_field", '$.start_after_period')

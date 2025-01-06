@@ -174,3 +174,22 @@ sum([
     if item.endswith(".parquet")
     and "_delta_log" not in item  # If it's a delta table
 ])
+
+
+# Print out the version of an installed module that can't be imported
+# i.e. when
+# import sentence_transformers failed, I did the below to get the installed version
+
+# 1. Get a path to the module's init file
+import importlib.util
+spec = importlib.util.find_spec("sentence_transformers")
+init_path = spec.origin
+print(init_path)
+
+# 2. Print out the contents of the init file and hope it has the version number
+with open(init_path, 'r') as afile:
+    print(afile.read())
+
+
+x = 88.5435432142
+print(f"x formatted = {x:.2f}")
